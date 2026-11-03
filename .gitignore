@@ -1,0 +1,4 @@
+# Ignore all directories of photos and videos
+photos/
+videos/
+calibration_photos/
