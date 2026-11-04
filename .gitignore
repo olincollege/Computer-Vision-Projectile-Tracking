@@ -2,6 +2,7 @@
 photos/
 videos/
 calibration_photos/
+*.zip
 
 # Ignore vscode cache files
 .vscode/
