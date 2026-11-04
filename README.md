@@ -1,1 +1,2 @@
 All photo and image data can be found in our [Google Drive](https://drive.google.com/drive/folders/1N3-gvEdkvS4225ycjw5OndmiJmaaT36y?usp=sharing)
+To use them, download each folder and move them into the Computer-Vision-Projectile-Tracking directory.
