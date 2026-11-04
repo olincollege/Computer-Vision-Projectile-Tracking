@@ -2,3 +2,6 @@
 photos/
 videos/
 calibration_photos/
+
+# Ignore vscode cache files
+.vscode/
