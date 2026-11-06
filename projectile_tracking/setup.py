@@ -1,3 +1,4 @@
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'projectile_tracking'
@@ -10,6 +11,9 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/photos', glob('photos/*')),
+        ('share/' + package_name + '/calibration_photos', glob('calibration_photos/*')),
+        ('share/' + package_name + '/videos', glob('videos/*'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,

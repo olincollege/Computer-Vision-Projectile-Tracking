@@ -6,6 +6,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
+from ament_index_python.packages import get_package_share_directory
 
 class ImagePublisher(Node):
     """ Publish a video as set of images over time. """
@@ -14,7 +15,8 @@ class ImagePublisher(Node):
         super().__init__("image_publisher")
 
         # Take in the images.
-        frame_paths = glob.glob("videos/*.png")
+        share_dir = get_package_share_directory("projectile_tracking")
+        frame_paths = glob.glob(share_dir + "/videos/*.png")
         self.frames = [cv2.imread(path) for path in frame_paths]
         self.frame = 0
 
@@ -22,7 +24,7 @@ class ImagePublisher(Node):
         self.publisher = self.create_publisher(Image, "image_topic", 10)
 
         # Start the loop timer.
-        self.timer = self.create_timer(0.25, self.publish_image)
+        self.timer = self.create_timer(1.0, self.publish_image)
 
         # Initialize the CvBridge
         self.bridge = CvBridge()
@@ -33,7 +35,7 @@ class ImagePublisher(Node):
         """
         # Convert OpenCV image to ROS 2 Image message.
         image_msg = self.bridge.cv2_to_imgmsg(
-            self.frames[self.frame], encoding="bgr8"
+            self.frames[self.frame]
         )
         image_msg.header.stamp = self.get_clock().now().to_msg()
         image_msg.header.frame_id = "camera_frame"
