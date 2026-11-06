@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='austin',
     maintainer_email='awoolf07@gmail.com',
-    description='TODO: Package description',
+    description='Tracks the 3D position of a ball using images',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -25,7 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'ball_detector = projectile_tracking.ball_detector:main',
-            'position_calculator = projectile_tracking.position_calculator:main'
+            'position_calculator = projectile_tracking.position_calculator:main',
+            'image_publisher = projectile_tracking.image_publisher:main'
         ],
     },
 )

@@ -1,0 +1,18 @@
+[1.044s] Invoking command in '/home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/install/projectile_tracking/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking/build --no-deps symlink_data
+[1.421s] running develop
+[1.606s] running egg_info
+[1.624s] writing projectile_tracking.egg-info/PKG-INFO
+[1.624s] writing dependency_links to projectile_tracking.egg-info/dependency_links.txt
+[1.624s] writing entry points to projectile_tracking.egg-info/entry_points.txt
+[1.624s] writing requirements to projectile_tracking.egg-info/requires.txt
+[1.625s] writing top-level names to projectile_tracking.egg-info/top_level.txt
+[1.659s] reading manifest file 'projectile_tracking.egg-info/SOURCES.txt'
+[1.660s] writing manifest file 'projectile_tracking.egg-info/SOURCES.txt'
+[1.678s] running build_ext
+[1.678s] Creating /home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/install/projectile_tracking/lib/python3.12/site-packages/projectile-tracking.egg-link (link to .)
+[1.679s] Installing ball_detector script to /home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/install/projectile_tracking/lib/projectile_tracking
+[1.679s] Installing position_calculator script to /home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/install/projectile_tracking/lib/projectile_tracking
+[1.679s] 
+[1.680s] Installed /home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking
+[1.680s] running symlink_data
+[1.712s] Invoked command in '/home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking' returned '0': DEBUGINFOD_URLS=https://debuginfod.ubuntu.com PYTHONPATH=/home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/install/projectile_tracking/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/austin/ros2_ws/src/Computer-Vision-Projectile-Tracking/build/projectile_tracking/build --no-deps symlink_data

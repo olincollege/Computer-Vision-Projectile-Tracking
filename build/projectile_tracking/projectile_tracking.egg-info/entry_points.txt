@@ -1,0 +1,3 @@
+[console_scripts]
+ball_detector = projectile_tracking.ball_detector:main
+position_calculator = projectile_tracking.position_calculator:main
