@@ -4,5 +4,8 @@ videos/
 calibration_photos/
 *.zip
 
-# Ignore vscode cache files
+# Ignore cache files
 .vscode/
+# Ignore Python cache files
+_pycache__/
+*.pyc
