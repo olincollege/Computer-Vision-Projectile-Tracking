@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: projectile-tracking
 Version: 0.0.0
-Summary: TODO: Package description
+Summary: Tracks the 3D position of a ball using images
 Maintainer: austin
 Maintainer-email: awoolf07@gmail.com
 License: TODO: License declaration

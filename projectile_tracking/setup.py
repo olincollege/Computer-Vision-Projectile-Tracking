@@ -13,7 +13,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/photos', glob('photos/*')),
         ('share/' + package_name + '/calibration_photos', glob('calibration_photos/*')),
-        ('share/' + package_name + '/videos', glob('videos/*'))
+        ('share/' + package_name + '/videos', glob('videos/*')),
+        ('share/' + package_name + '/config', glob('config/*'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,

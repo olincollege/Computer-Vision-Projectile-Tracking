@@ -1,3 +1,4 @@
 [console_scripts]
 ball_detector = projectile_tracking.ball_detector:main
+image_publisher = projectile_tracking.image_publisher:main
 position_calculator = projectile_tracking.position_calculator:main
