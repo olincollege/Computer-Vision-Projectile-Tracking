@@ -14,33 +14,35 @@ class ImagePublisher(Node):
         """ Take in all the images and initialize the Node. """
         super().__init__("image_publisher")
 
+        # Initialize the CvBridge
+        self.bridge = CvBridge()
+
         # Take in the images.
+        print("processing...")
         share_dir = get_package_share_directory("projectile_tracking")
-        frame_paths = glob.glob(share_dir + "/videos/*.png")
-        self.frames = [cv2.imread(path) for path in frame_paths]
+        frame_paths = glob.glob(share_dir + "/photos/*.png")
+        self.frames = frame_paths[:]
+        for i, path in enumerate(frame_paths):
+            self.frames[i] = self.bridge.cv2_to_imgmsg(cv2.imread(path))
+            self.frames[i].header.frame_id = "camera_frame"
+            self.frames[i].encoding = "bgr8"
+        print("done")
+
         self.frame = 0
 
         # Create the publisher.
         self.publisher = self.create_publisher(Image, "image_topic", 10)
 
         # Start the loop timer.
-        self.timer = self.create_timer(1.0, self.publish_image)
-
-        # Initialize the CvBridge
-        self.bridge = CvBridge()
+        self.timer = self.create_timer(2.0, self.publish_image)
 
     def publish_image(self):
         """
         Publish the next image in self.frames
         """
-        # Convert OpenCV image to ROS 2 Image message.
-        image_msg = self.bridge.cv2_to_imgmsg(
-            self.frames[self.frame]
-        )
-        image_msg.header.stamp = self.get_clock().now().to_msg()
-        image_msg.header.frame_id = "camera_frame"
-
         # Publish the image
+        image_msg = self.frames[self.frame]
+        image_msg.header.stamp = self.get_clock().now().to_msg()
         self.publisher.publish(image_msg)
         self.frame = (self.frame + 1) % len(self.frames)
 
