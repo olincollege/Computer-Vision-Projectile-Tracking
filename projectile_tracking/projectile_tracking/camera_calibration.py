@@ -16,7 +16,7 @@ objpoints = [] # 3d point in real world space
 imgpoints = [] # 2d points in image plane.
 
 share_dir = get_package_share_directory("projectile_tracking")
-images = glob.glob(share_dir + "/calibration_photos/*.png")
+images = glob.glob(share_dir + "/calibration_photos/*2*.png")
  
 for fname in images:
     img = cv.imread(fname)
@@ -39,15 +39,15 @@ for fname in images:
 
 cv.destroyAllWindows()
 
-ret, mtx, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+_, mtx, dist, _, _ = cv.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+
+mtx = mtx.tolist()
+dist = dist.tolist()
 
 yaml_dict = {
-    "ret" : ret,
     "mtx" : mtx,
-    "dist" : dist,
-    "rvecs" : rvecs,
-    "tvecs" : tvecs
+    "dist" : dist
 }
 
 with open('projectile_tracking/config/calibration.yaml', 'w') as file:
-    yaml.dump(yaml_dict, file, default_flow_style=False, sort_keys=False)
+    yaml.safe_dump(yaml_dict, file, default_flow_style=False, sort_keys=False)
