@@ -20,7 +20,7 @@ class PositionCalculator(Node):
         with open(yaml_path, "r", encoding="utf-8") as file:
             yaml_dict = yaml.safe_load(file)
         self.r_to_z = yaml_dict["r_to_z"]
-        self.camera_to_feet = yaml_dict["camera_to_feet"]
+        self.width_over_focal_length = yaml_dict["width_over_focal_length"]
 
         # Create the subscriber.
         self.create_subscription(
@@ -32,18 +32,30 @@ class PositionCalculator(Node):
     def calculate_position(self, msg):
         """
         Calculate the position of the ball and publish it.
+
+        msg (tuple[5]<float>):
+            The x position of the ball in the image in pixels.
+            The y position of the ball in the image in pixels.
+            The radius position of the ball in the image in pixels.
+            The width of the image in pixels.
+            The height of the image in pixels.
         """
-        # Find the 2D x & y positions and radius and translate to feet.
-        x2d = msg[0]
-        y2d = msg[1]
+        # Find the 2D x & y positions and radius
+        w = msg[3]
+        h = msg[4]
+        x2d = msg[0] - 0.5*w
+        y2d = -msg[1] - 0.5*h
         r2d = msg[2]
 
         # Calculate the z position of the ball using its radius.
         z3d = self.r_to_z / r2d
 
         # Calculate the x & y positions in 3D space.
-        x3d = x2d * z3d * self.camera_to_feet
-        y3d = y2d * z3d * self.camera_to_feet
+        # 3D position =
+        # 2d_position_(px) * z_3D_position (feet) * sensor_width (mm) /
+        # focal_length / sensor_width (px)
+        x3d = x2d * z3d * self.width_over_focal_length / w
+        y3d = y2d * z3d * self.width_over_focal_length / w
 
         # Publish the 3D position.
         ball_pos = PointStamped()
