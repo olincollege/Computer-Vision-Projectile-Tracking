@@ -7,6 +7,7 @@ import numpy as np
 
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image #TODO: Add dependencies in setup.py
+from geometry_msgs.msg import Point, PointStamped
 
 class BallDetector(Node):
     def __init__(self):
@@ -16,45 +17,44 @@ class BallDetector(Node):
         # Establish Publishers and Subscribers
         """
         1. *Create a subscriber for the video camera feed
-        2. *Create a subscriber for the camera calibration data
-        3. Create a publisher for the ball position and radius
+        2. Create a publisher for the ball position and radius
         """
         self.videos = self.create_subscription(Image, 'image_topic', self.image_callback, 10)
-        
+        self.ball_publisher = self.create_publisher(PointStamped, "ball_pos", 10)
         # Handle subscriptions
-        def image_callback(self, msg):
-            pass
+    def image_callback(self, msg):
+        pass
         # Ball Dectection
-        def detect_ball(calibrated_images):
-            detected_balls = []
+    def detect_ball(self, calibrated_images):
+        detected_balls = []
             
-            for image in calibrated_images: #For each calibrated image...
-                photo = cv2.imread(image)   #...Load the image into OpenCV
+        for image in calibrated_images: #For each calibrated image...
+            photo = cv2.imread(image)   #...Load the image into OpenCV
 
-                if photo is None:
-                    self.get_logger().warn(f"Could not load image: {image}")
-                    continue
+            if photo is None:
+                self.get_logger().warn(f"Could not load image: {image}")
+                continue
 
-                #Convert image to grayscale
-                gray_image = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+            #Convert image to grayscale
+            gray_image = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
 
-                # Set minDist for Hough Circle Transform based on diagonal image size
-                h, w = photo.shape[:2] #Get the height and width of the image
-                minDist = math.hypot(h, w) + 1 #Set the minimum distance between detected circles
+            # Set minDist for Hough Circle Transform based on diagonal image size
+            self.h, self.w = photo.shape[:2] #Get the height and width of the image
+            minDist = math.hypot(self.h, self.w) + 1 #Set the minimum distance between detected circles
 
-                # Apply Hough Circle Transform to detect circles in the image
-                circles = cv2.HoughCircles(gray_image, cv2.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = minDist, param1 = 300, param2 = 0.9, minRadius = 0, maxRadius = 0) #Detect circles in the image
+            # Apply Hough Circle Transform to detect circles in the image
+            circles = cv2.HoughCircles(gray_image, cv2.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = minDist, param1 = 300, param2 = 0.9, minRadius = 0, maxRadius = 0) #Detect circles in the image
 
-                if circles is None:
-                    self.get_logger().warn(f"No circles detected in image: {image}")
-                    continue
+            if circles is None:
+                self.get_logger().warn(f"No circles detected in image: {image}")
+                continue
 
                 
-                for x, y, radius in circles[0]:
-                    # draw the circle
-                    cv2.circle(photo, (x, y), radius, (0, 255, 0), thickness = 2)
+            for x, y, radius in circles[0]:
+                # draw the circle
+                cv2.circle(photo, (x, y), radius, (0, 255, 0), thickness = 2)
 
-                    detected_balls.append((x, y, radius))  # Add the detected ball position and radius to list
+                detected_balls.append((x, y, radius, self.w, self.h))  # Add the detected ball position and radius to list
 
                 # Display the detected circles on the image
                 cv2.imshow('detected circles', photo)
@@ -67,7 +67,11 @@ class BallDetector(Node):
             return tuple(detected_balls)  # Return the tuple of detected ball x, y, and radius
 
         # Package Publisher
-
+    def publish_ball_position(self, ball_position):
+        """
+        Publish the ball position and radius as a PointStamped message.
+        """
+        
 # Main Run Loop
 def main(args=None):
     """ Spin node. """
