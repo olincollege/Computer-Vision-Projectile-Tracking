@@ -1,7 +1,6 @@
 
 # Imports
 import cv2
-from matplotlib import image
 import rclpy
 import math
 import numpy as np
@@ -20,8 +19,11 @@ class BallDetector(Node):
         2. *Create a subscriber for the camera calibration data
         3. Create a publisher for the ball position and radius
         """
-
-
+        self.videos = self.create_subscription(Image, 'image_topic', self.image_callback, 10)
+        
+        # Handle subscriptions
+        def image_callback(self, msg):
+            pass
         # Ball Dectection
         def detect_ball(calibrated_images):
             detected_balls = []
@@ -30,7 +32,7 @@ class BallDetector(Node):
                 photo = cv2.imread(image)   #...Load the image into OpenCV
 
                 if photo is None:
-                    print(f"Could not load image: {image}")
+                    self.get_logger().warn(f"Could not load image: {image}")
                     continue
 
                 #Convert image to grayscale
@@ -44,7 +46,7 @@ class BallDetector(Node):
                 circles = cv2.HoughCircles(gray_image, cv2.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = minDist, param1 = 300, param2 = 0.9, minRadius = 0, maxRadius = 0) #Detect circles in the image
 
                 if circles is None:
-                    print(f"No circles detected in image: {image}")
+                    self.get_logger().warn(f"No circles detected in image: {image}")
                     continue
 
                 
@@ -62,12 +64,11 @@ class BallDetector(Node):
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-            return tuple(detected_balls)  # Return the tuple of detected balls
+            return tuple(detected_balls)  # Return the tuple of detected ball x, y, and radius
 
         # Package Publisher
 
-        # Main Run Loop
-
+# Main Run Loop
 def main(args=None):
     """ Spin node. """
     rclpy.init()

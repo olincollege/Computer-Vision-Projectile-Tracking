@@ -7,5 +7,6 @@ calibration_photos/
 # Ignore cache files
 .vscode/
 # Ignore Python cache files
-_pycache__/
+projectile_tracking/projectile_tracking/__pycache__/
 *.pyc
+_init__.cpython-312.pyc
