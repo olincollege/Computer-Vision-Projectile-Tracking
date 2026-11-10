@@ -38,7 +38,7 @@ class BallDetector(Node):
         self.dist = np.array(yaml_dict["dist"])
 
         # Open and prepare the image
-        self.uncalibrated_images = glob.glob(share_dir + "/photos/*.png")
+        self.uncalibrated_images = glob.glob(share_dir + "/photos/_Q1A8026.png")
 
         self.detection_timer = self.create_timer(1.0, self.run_detection_once)
 
@@ -65,12 +65,12 @@ class BallDetector(Node):
         # Find the directory of the yaml file
 
         undistorted_images = []
-        
+
         for image in images:
             if image is None:
                 self.get_logger().warn(f"Could not load image: {image}")
                 continue
-            
+
         # Get image dimensions
             h,  w = image.shape[:2]
             newcameramtx, roi = cv.getOptimalNewCameraMatrix(self.mtx, self.dist, (w,h), 1, (w,h))
@@ -92,15 +92,24 @@ class BallDetector(Node):
         for image in calibrated_images: #For each calibrated image...
             photo = cv.resize(image, None, fx=scale_down, fy=scale_down, interpolation=cv.INTER_LINEAR)
 
+            # Set minimum and max HSV values for the ball
+            share_dir = get_package_share_directory("projectile_tracking")
+            yaml_path = share_dir + '/config/color_mask.yaml'
+            with open(yaml_path, "r", encoding="utf-8") as file:
+                color_range = yaml.safe_load(file)
+            lower = np.array([color_range["hMin"], color_range["sMin"], color_range["vMin"]])
+            upper = np.array([color_range["hMax"], color_range["sMax"], color_range["vMax"]])
+
+            # Create HSV Image and threshold into a range.
+            hsv = cv.cvtColor(photo, cv.COLOR_BGR2HSV)
+            gray_image = cv.inRange(hsv, lower, upper)
 
             # Set minDist for Hough Circle Transform based on diagonal image size
-            self.h, self.w = photo.shape[:2] #Get the height and width of the image
-            minDist = math.hypot(self.h, self.w) + 1 #Set the minimum distance between detected circles
-
-            grey_image = cv.cvtColor(photo, cv.COLOR_BGR2GRAY)
+            h, w = photo.shape[:2] #Get the height and width of the image
+            min_dist = math.hypot(h, w) + 1 #Set the minimum distance between detected circles
 
             # Apply Hough Circle Transform to detect circles in the image
-            circles = cv.HoughCircles(grey_image, cv.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = 1, param1 = 300, param2 = 0.6, minRadius = 0, maxRadius = 0) #Detect circles in the image
+            circles = cv.HoughCircles(gray_image, cv.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = min_dist, param1 = 300, param2 = 0.6, minRadius = 0, maxRadius = 0) #Detect circles in the image
 
             if circles is None:
                 self.get_logger().info(f"No circles detected, skipping image {image}")
@@ -110,7 +119,7 @@ class BallDetector(Node):
                 # draw the circle
                 cv.circle(photo, (int(x), int(y)), int(radius), (0, 255, 0), thickness = 2)
 
-                detected_balls.append((x, y, radius, self.w, self.h))  # Add the detected ball position and radius to list
+                detected_balls.append((x, y, radius, w, h))  # Add the detected ball position and radius to list
 
 
         return detected_balls  # Return list of detected ball x, y, radius, and image dimensions (width, height)
@@ -133,7 +142,7 @@ class BallDetector(Node):
         for ball_data in detected_balls:
             self.publish_ball_data(ball_data)
 
-            self.get_logger().info(f"Published {len(detected_balls)} detections.")
+        self.get_logger().info(f"Published {len(detected_balls)} detections.")
 
     def run_detection_once(self):
         self.detection_timer.cancel()
