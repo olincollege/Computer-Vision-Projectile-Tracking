@@ -1,13 +1,16 @@
-
 # Imports
-import cv2
 import rclpy
 import math
+import yaml
 import numpy as np
+import cv2 as cv
+import glob
 
 from rclpy.node import Node
-from sensor_msgs.msg import CameraInfo, Image #TODO: Add dependencies in setup.py
-from geometry_msgs.msg import Point, PointStamped
+from std_msgs.msg import Float32MultiArray
+from ament_index_python.packages import get_package_share_directory
+
+
 
 class BallDetector(Node):
     def __init__(self):
@@ -19,59 +22,123 @@ class BallDetector(Node):
         1. *Create a subscriber for the video camera feed
         2. Create a publisher for the ball position and radius
         """
-        self.videos = self.create_subscription(Image, 'image_topic', self.image_callback, 10)
-        self.ball_publisher = self.create_publisher(PointStamped, "ball_pos", 10)
-        # Handle subscriptions
-    def image_callback(self, msg):
-        pass
-        # Ball Dectection
-    def detect_ball(self, calibrated_images):
-        detected_balls = []
-            
-        for image in calibrated_images: #For each calibrated image...
-            photo = cv2.imread(image)   #...Load the image into OpenCV
+        self.ball_publisher = self.create_publisher(Float32MultiArray, "detection", 10)
+        
+        # Callibration Parameters
+        # Find the directory of the yaml file
+        share_dir = get_package_share_directory("projectile_tracking")
+        yaml_path = share_dir + '/config/calibration.yaml'
 
-            if photo is None:
+        # Open it and read its contents
+        with open(yaml_path, "r", encoding="utf-8") as file:
+            yaml_dict = yaml.safe_load(file)
+
+        # Unpack the data returned by cv.calibrateCamera()
+        self.mtx = np.array(yaml_dict["mtx"])
+        self.dist = np.array(yaml_dict["dist"])
+
+        # Open and prepare the image
+        self.uncalibrated_images = glob.glob(share_dir + "/photos/*.png")
+
+        self.detection_timer = self.create_timer(1.0, self.run_detection_once)
+
+
+    def load_images(self):
+        """
+        Load images from the specified directory.
+        """
+        loaded_images = []
+            
+        for image_path in self.uncalibrated_images:
+            image = cv.imread(image_path)
+            if image is None:
+                self.get_logger().warn(f"Could not load image: {image_path}")
+                continue
+            loaded_images.append(image)
+            
+        return loaded_images
+
+    def undistort_image(self, images):
+        """
+        Undistort the input image using the calibration parameters.
+        """
+        # Find the directory of the yaml file
+
+        undistorted_images = []
+        
+        for image in images:
+            if image is None:
                 self.get_logger().warn(f"Could not load image: {image}")
                 continue
+            
+        # Get image dimensions
+            h,  w = image.shape[:2]
+            newcameramtx, roi = cv.getOptimalNewCameraMatrix(self.mtx, self.dist, (w,h), 1, (w,h))
 
-            #Convert image to grayscale
-            gray_image = cv2.cvtColor(photo, cv2.COLOR_BGR2GRAY)
+        # Undistort the image
+            undistorted_image = cv.undistort(image, self.mtx, self.dist, None, newcameramtx)
+
+        # Crop the image
+            x, y, w, h = roi
+            undistorted_image = undistorted_image[y:y+h, x:x+w]
+            undistorted_images.append(undistorted_image)
+        
+        return undistorted_images
+    
+    def detect_ball(self, calibrated_images):
+        detected_balls = []
+        scale_down = 0.13  
+        
+        for image in calibrated_images: #For each calibrated image...
+            photo = cv.resize(image, None, fx=scale_down, fy=scale_down, interpolation=cv.INTER_LINEAR)
+
 
             # Set minDist for Hough Circle Transform based on diagonal image size
             self.h, self.w = photo.shape[:2] #Get the height and width of the image
             minDist = math.hypot(self.h, self.w) + 1 #Set the minimum distance between detected circles
 
+            grey_image = cv.cvtColor(photo, cv.COLOR_BGR2GRAY)
+
             # Apply Hough Circle Transform to detect circles in the image
-            circles = cv2.HoughCircles(gray_image, cv2.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = minDist, param1 = 300, param2 = 0.9, minRadius = 0, maxRadius = 0) #Detect circles in the image
+            circles = cv.HoughCircles(grey_image, cv.HOUGH_GRADIENT_ALT, dp = 1.5, minDist = 1, param1 = 300, param2 = 0.6, minRadius = 0, maxRadius = 0) #Detect circles in the image
 
             if circles is None:
-                self.get_logger().warn(f"No circles detected in image: {image}")
+                self.get_logger().info(f"No circles detected, skipping image {image}")
                 continue
-
-                
+            
             for x, y, radius in circles[0]:
                 # draw the circle
-                cv2.circle(photo, (x, y), radius, (0, 255, 0), thickness = 2)
+                cv.circle(photo, (int(x), int(y)), int(radius), (0, 255, 0), thickness = 2)
 
                 detected_balls.append((x, y, radius, self.w, self.h))  # Add the detected ball position and radius to list
 
-                # Display the detected circles on the image
-                cv2.imshow('detected circles', photo)
 
-
-            # Keep the window open and close when key pressed
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-
-            return tuple(detected_balls)  # Return the tuple of detected ball x, y, and radius
+        return detected_balls  # Return list of detected ball x, y, radius, and image dimensions (width, height)
 
         # Package Publisher
-    def publish_ball_position(self, ball_position):
+    def publish_ball_data(self, ball_data):
         """
-        Publish the ball position and radius as a PointStamped message.
+        Publish the ball position, radius, and image dimensions as a Float32MultiArray message.
         """
-        
+        msg = Float32MultiArray()
+        msg.data = [float(value) for value in ball_data]
+        self.ball_publisher.publish(msg)
+
+    def run_detection(self):
+        self.get_logger().info('Running ball detection...')
+        original_images = self.load_images()
+        calibrated_images = self.undistort_image(original_images)
+        detected_balls = self.detect_ball(calibrated_images)
+
+        for ball_data in detected_balls:
+            self.publish_ball_data(ball_data)
+
+            self.get_logger().info(f"Published {len(detected_balls)} detections.")
+
+    def run_detection_once(self):
+        self.detection_timer.cancel()
+        self.run_detection()
+
 # Main Run Loop
 def main(args=None):
     """ Spin node. """
