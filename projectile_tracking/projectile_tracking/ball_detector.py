@@ -5,6 +5,7 @@ import yaml
 import numpy as np
 import cv2 as cv
 import glob
+import matplotlib.pyplot as plt
 
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
@@ -39,7 +40,8 @@ class BallDetector(Node):
 
         # Open and prepare the image
         self.uncalibrated_images = glob.glob(share_dir + "/photos/_Q1A8026.png")
-
+        self.uncalibrated_video_frames = glob.glob(share_dir + "/video_photos/*.png")
+        self.uncalibrated_z_photos = glob.glob(share_dir + "/z_photos/*.png")
         self.detection_timer = self.create_timer(1.0, self.run_detection_once)
 
 
@@ -85,6 +87,54 @@ class BallDetector(Node):
         
         return undistorted_images
     
+    def calibration(self):
+        loaded_z_photos = self.load_images(self.uncalibrated_z_photos)
+        calibrated_frames = self.undistort_image(loaded_z_photos)
+        z_list = self.detect_ball(calibrated_frames)
+
+        ball_radius = np.array([ball[2] for ball in z_list], dtype=float)
+        distance_step = np.arange(4, 31, dtype=float)
+    
+        a, b = np.polyfit(ball_radius, distance_step, 1)
+
+        # Save coefficients for future distance estimates.
+        self.distance_a = a
+        self.distance_b = b
+
+        # Use an ascending, smooth radius range to draw the curve.
+        radius_curve = np.linspace(
+            ball_radius.min(),
+            ball_radius.max(),
+            200,
+        )
+        distance_curve = a * radius_curve + b
+
+        plt.scatter(
+            ball_radius,
+            distance_step,
+            label="Calibration measurements",
+        )
+        plt.plot(
+            radius_curve,
+            distance_curve,
+            color="red",
+            label="Inverse best fit",
+        )
+
+        plt.xlabel("Ball radius (pixels)")
+        plt.ylabel("Camera-to-ball distance (ft)")
+        plt.title("Ball Distance Calibration")
+        plt.grid(True)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+        return a, b
+
+    def get_distance(self, radius):
+        distance = self.distance_a * radius + self.distance_b
+        return distance
+    
     def detect_ball(self, calibrated_images):
         detected_balls = []
         scale_down = 0.13  
@@ -118,11 +168,13 @@ class BallDetector(Node):
             for x, y, radius in circles[0]:
                 # draw the circle
                 cv.circle(photo, (int(x), int(y)), int(radius), (0, 255, 0), thickness = 2)
-
-                detected_balls.append((x, y, radius, w, h))  # Add the detected ball position and radius to list
+                distance = self.get_distance(radius)  # Call the get_distance function to calculate the distance based on the detected radius
+                
+                detected_balls.append((x, y, radius, w, h, distance))  # Add the detected ball position and radius to list
 
 
         return detected_balls  # Return list of detected ball x, y, radius, and image dimensions (width, height)
+
 
         # Package Publisher
     def publish_ball_data(self, ball_data):
@@ -130,6 +182,7 @@ class BallDetector(Node):
         Publish the ball position, radius, and image dimensions as a Float32MultiArray message.
         """
         msg = Float32MultiArray()
+        msg.header.stamp = self.get_clock().now().to_msg()
         msg.data = [float(value) for value in ball_data]
         self.ball_publisher.publish(msg)
 
