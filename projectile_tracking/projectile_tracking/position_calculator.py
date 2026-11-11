@@ -3,6 +3,7 @@ Calculate the 3D position of a ball based on its 2D projected position and radiu
 """
 
 from geometry_msgs.msg import Point, PointStamped, Header
+from std_msgs.msg import Float32MultiArray
 import rclpy
 from rclpy.node import Node
 import yaml
@@ -24,7 +25,7 @@ class PositionCalculator(Node):
 
         # Create the subscriber.
         self.create_subscription(
-            tuple, "detection", self.calculate_position, 10)
+            Float32MultiArray, "detection", self.calculate_position, 10)
 
         # Create the publisher.
         self.publisher = self.create_publisher(PointStamped, "ball_pos", 10)
@@ -33,7 +34,7 @@ class PositionCalculator(Node):
         """
         Calculate the position of the ball and publish it.
 
-        msg (tuple[5]<float>):
+        msg (Float32MultiArray[5]):
             The x position of the ball in the image in pixels.
             The y position of the ball in the image in pixels.
             The radius position of the ball in the image in pixels.
@@ -41,11 +42,9 @@ class PositionCalculator(Node):
             The height of the image in pixels.
         """
         # Find the 2D x & y positions and radius
-        w = msg[3]
-        h = msg[4]
-        x2d = msg[0] - 0.5*w
-        y2d = -msg[1] - 0.5*h
-        r2d = msg[2]
+        x, y, r2d, w, h = msg.data
+        x2d = x - 0.5*w
+        y2d = -y - 0.5*h
 
         # Calculate the z position of the ball using its radius.
         z3d = self.r_to_z / r2d
