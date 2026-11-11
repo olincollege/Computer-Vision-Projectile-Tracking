@@ -3,6 +3,8 @@ photos/
 videos/
 calibration_photos/
 *.zip
+video_photos/
+z_photos/
 
 # Ignore cache files
 .vscode/
