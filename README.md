@@ -100,6 +100,6 @@ Through this project, we gained experience working with OpenCV and ROS2. We lear
 6. Rename the image to `input.png` and move it to the `photos` directory you created.  
 7. Open three terminals in your `ros2_ws` directory.  
 8. In one of these terminals run the commands `run colcon build \--symlink-install` and `source ./install/setup.bash`.  
-9. Run the following commands, in order, one in each of your `ros2_ws` terminals: `ros2 topic echo \\ball_pos geometry_msgs/msg/PointStamped`, `ros2 run projectile_tracking position_calculator`, `ros2 run projectile_tracking ball_detector`.  
-10. Read the output of the terminal that you ran `ros2 topic echo \\ball_pos` in. This includes the x, y, z position of the ball measured in feet. Its frame is defined with the origin at the focal point of the camera, which lines up with the center of the image, \+x being to the right, \+y being up, and \+z being forward.  
+9. Run the following commands, in order, one in each of your `ros2_ws` terminals: `ros2 topic echo \ball_pos geometry_msgs/msg/PointStamped`, `ros2 run projectile_tracking position_calculator`, `ros2 run projectile_tracking ball_detector`.  
+10. Read the output of the terminal that you ran `ros2 topic echo \ball_pos` in. This includes the x, y, z position of the ball measured in feet. Its frame is defined with the origin at the focal point of the camera, which lines up with the center of the image, \+x being to the right, \+y being up, and \+z being forward.  
 11. Use ctrl+c in all your terminals to shutdown the nodes and stop reading from the ball position topic.
