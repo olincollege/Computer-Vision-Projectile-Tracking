@@ -99,7 +99,7 @@ Through this project, we gained experience working with OpenCV and ROS2. We lear
 3. Clone this repository into your `ros2_ws/src` directory.  
 4. Create a directory inside of your `ros2_ws/src/Computer-Vision-Projectile-Tracking/projectile_tracking` directory named `photos`.  
 5. Download an image from our [Google Drive](https://drive.google.com/drive/folders/1N3-gvEdkvS4225ycjw5OndmiJmaaT36y), use one from photos or videos to get one with a ball in it.  
-6. Rename the image to `input.png` and move it to the `photos` directory you created.  
+6. Move the image to the `photos` directory you created.  
 7. Open three terminals in your `ros2_ws` directory.  
 8. In one of these terminals run the commands `run colcon build \--symlink-install` and `source ./install/setup.bash`.  
 9. Run the following commands, in order, one in each of your `ros2_ws` terminals: `ros2 topic echo \ball_pos geometry_msgs/msg/PointStamped`, `ros2 run projectile_tracking position_calculator`, `ros2 run projectile_tracking ball_detector`.  
