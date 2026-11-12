@@ -33,6 +33,9 @@ To take in the image, we use OpenCV. It reads a png file and stores the pixel da
 
 Once the image is calibrated we detect the ball. The first step of this process is to isolate the ball in the image based on color. The ball is mostly a solid color but it has highlights and shadows. If we were to define a range of values for the red, blue, and green color channels of the image, we wouldn’t be able to narrow this range down as much as we’d like, because the shadows and highlights widen the range of all three channels. So, to account for this, we convert to hue, saturation, value (HSV) colorspace using OpenCV’s `cvtColor` function. This way, we can have a tight range of hues, to isolate the blue of the ball, and a wider range for saturation and value, to account for the lighting. Once we found a good HSV range for our ball we wrote it to a YAML file to be read by the ball detector node. With these values, it uses OpenCV’s `inRange` function to make a black and white image where the ball is white and everything else is black.
 
+![circle around ball in image](detection_result.png)  
+(Figure 1) The position and radius of the ball is found using HoughCircles.
+
 Next, we used a built in OpenCV function, `HoughCircles`, which applies the Hough Circle Transform to an image. This function outputs the x and y center position and radius of each detected circle. Our implementation is based on this OpenCV documentation, [https\://docs.opencv.org/4.13.0/da/d53/tutorial_py_houghcircles.html](https://docs.opencv.org/4.13.0/da/d53/tutorial_py_houghcircles.html) . `Hough Circles` has several input parameters which include input image and Hough detection method. It also has parameters that affect the sensitivity of the detection such as `dp`, `minDist`, `param1`, `param2`, `minRadius`, and `maxRadius`. Below is an explanation of each as well as our design choices.
 
 - `image` (input image): Our black and white image result  
@@ -45,8 +48,9 @@ Next, we used a built in OpenCV function, `HoughCircles`, which applies the Houg
 - `maxRadius` (maximum radius of circle detected): Similarly to `minRadius`, we set this value to 0\.
 
 To convert the 2D position and radius of the ball in the image, measured in pixels, to the 3D position of the ball in the world, measured in feet, we first find the z axis distance from the camera’s focal point to the ball. We took a set of photos with constant positions in the x and y directions (right and up from the camera’s perspective), with evenly incremented positions on the z axis (towards the camera). We then found the radius of the ball, in pixels, in each photo and used this data to make a calibration curve that converts from circle radius in pixels to ball z axis position in feet. This curve is defined by a constant, which we calculated, divided by the radius of the circle.  
+
 ![Pinhole Camera Model Diagram](pinhole_camera_model.png)  
-(Figure 1\) The pinhole camera model describes how objects in 3D space are projected onto the image sensor of an ideal pinhole camera. This assumes that the aperture of the camera is a single point, and that there is no lens to distort the image in any way. No real camera has an infinitesimally small aperture so some parts of the image will be slightly blurred, and the lens of the camera slightly distorts the image but we account for this with our camera calibration.
+(Figure 2\) The pinhole camera model describes how objects in 3D space are projected onto the image sensor of an ideal pinhole camera. This assumes that the aperture of the camera is a single point, and that there is no lens to distort the image in any way. No real camera has an infinitesimally small aperture so some parts of the image will be slightly blurred, and the lens of the camera slightly distorts the image but we account for this with our camera calibration.
 
 x \= X \* f / Z	y \= Y \* f / Z  
 (Equation 1\) With an ideal pinhole camera, a point in 3D space (X, Y, Z) will be projected onto the image sensor such that the position of the point in the image (x, y) is proportional to the real x/y position and the focal length (f), and inversely proportional to the z position.
