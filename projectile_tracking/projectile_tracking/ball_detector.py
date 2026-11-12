@@ -43,20 +43,37 @@ class BallDetector(Node):
 
         # Locate the camera calibration file in the package's share directory
         share_dir = get_package_share_directory("projectile_tracking")
-        yaml_path = share_dir + '/config/calibration.yaml'
+        image_yaml_path = share_dir + '/config/calibration.yaml'
 
         # Read camera calibration parameters from YAML
-        with open(yaml_path, "r", encoding="utf-8") as file:
-            yaml_dict = yaml.safe_load(file)
+        with open(image_yaml_path, "r", encoding="utf-8") as image_file:
+            image_yaml_dict = yaml.safe_load(image_file)
 
         # Convert the camera matrix and distortion coefficients into arrays
-        self.mtx = np.array(yaml_dict["mtx"])
-        self.dist = np.array(yaml_dict["dist"])
+        self.mtx = np.array(image_yaml_dict["mtx"])
+        self.dist = np.array(image_yaml_dict["dist"])
 
         # Collect paths for the image sets
-        self.uncalibrated_images = glob.glob(
-            share_dir + "/photos/_Q1A8026.png"
-        )
+        frame_paths = glob.glob(share_dir + "/photos/*.png")
+        self.uncalibrated_images = frame_paths[:1]
+
+
+        # Read mask parameters from YAML
+        mask_yaml_path = share_dir + '/config/color_mask.yaml'
+
+        with open(mask_yaml_path, "r", encoding="utf-8") as mask_file:
+            color_range = yaml.safe_load(mask_file)
+
+        self.lower = np.array([
+                color_range["hMin"],
+                color_range["sMin"],
+                color_range["vMin"],
+            ])
+        self.upper = np.array([
+                color_range["hMax"],
+                color_range["sMax"],
+                color_range["vMax"],
+            ])
 
         # Schedule detection after one second. The callback cancels this timer
         # so that detection is performed only once
@@ -85,7 +102,7 @@ class BallDetector(Node):
                 continue
 
             loaded_images.append(image)
-
+        image = cv.imread(self.uncalibrated_images[0])
         return loaded_images
 
     def undistort_image(self, images):
@@ -156,33 +173,20 @@ class BallDetector(Node):
             )
 
             # Load the HSV thresholds defining the target ball's color.
-            share_dir = get_package_share_directory("projectile_tracking")
-            yaml_path = share_dir + '/config/color_mask.yaml'
 
-            with open(yaml_path, "r", encoding="utf-8") as file:
-                color_range = yaml.safe_load(file)
-
-            lower = np.array([
-                color_range["hMin"],
-                color_range["sMin"],
-                color_range["vMin"],
-            ])
-            upper = np.array([
-                color_range["hMax"],
-                color_range["sMax"],
-                color_range["vMax"],
-            ])
 
             # Convert BGR to HSV, then produce a binary mask of pixels
             # whose color falls within the configured bounds
             hsv = cv.cvtColor(photo, cv.COLOR_BGR2HSV)
-            gray_image = cv.inRange(hsv, lower, upper)
+            color_mask = cv.inRange(hsv, self.lower, self.upper)
+            masked_photo = cv.bitwise_and(photo, photo, mask=color_mask)
 
             # Set the required separation between circle centers larger than
             # the image diagonal to suppress multiple detections per image
             h, w = photo.shape[:2]
             min_dist = math.hypot(h, w) + 1
 
+            gray_image = cv.cvtColor(masked_photo, cv.COLOR_BGR2GRAY)
             # Search the color mask for circles using the alternate
             # gradient-based Hough method
             circles = cv.HoughCircles(
