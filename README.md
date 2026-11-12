@@ -52,11 +52,11 @@ To convert the 2D position and radius of the ball in the image, measured in pixe
 ![Pinhole Camera Model Diagram](pinhole_camera_model.png)  
 (Figure 2\) The pinhole camera model describes how objects in 3D space are projected onto the image sensor of an ideal pinhole camera. This assumes that the aperture of the camera is a single point, and that there is no lens to distort the image in any way. No real camera has an infinitesimally small aperture so some parts of the image will be slightly blurred, and the lens of the camera slightly distorts the image but we account for this with our camera calibration.
 
-x \= X \* f / Z
+x \= X \* f / Z  
 y \= Y \* f / Z  
 (Equation 1\) With an ideal pinhole camera, a point in 3D space (X, Y, Z) will be projected onto the image sensor such that the position of the point in the image (x, y) is proportional to the real x/y position and the focal length (f), and inversely proportional to the z position.
 
-X \= Z \* x / f
+X \= Z \* x / f  
 Y \= Z \* y / f  
 (Equation 2\) This can be rearranged to get the 3D X/Y position from the 2D x/y position, focal length, and 3D z position.
 
