@@ -102,7 +102,6 @@ class BallDetector(Node):
                 continue
 
             loaded_images.append(image)
-        image = cv.imread(self.uncalibrated_images[0])
         return loaded_images
 
     def undistort_image(self, images):
