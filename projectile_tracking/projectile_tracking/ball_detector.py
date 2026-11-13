@@ -56,6 +56,7 @@ class BallDetector(Node):
         # Collect paths for the image sets
         frame_paths = glob.glob(share_dir + "/photos/*.png")
         self.uncalibrated_images = frame_paths[:1]
+        print(self.uncalibrated_images)
 
 
         # Read mask parameters from YAML

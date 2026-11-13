@@ -44,7 +44,12 @@ class PositionCalculator(Node):
         # Find the 2D x & y positions and radius
         x, y, r2d, w, h = msg.data
         x2d = x - 0.5*w
-        y2d = -y - 0.5*h
+        y2d = -y + 0.5*h
+        print(f"{x = }")
+        print(f"{y = }")
+        print(f"{x2d = }")
+        print(f"{y2d = }")
+        print(f"{r2d = }")
 
         # Calculate the z position of the ball using its radius.
         z3d = self.r_to_z / r2d
